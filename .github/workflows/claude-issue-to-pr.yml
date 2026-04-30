@@ -1,0 +1,100 @@
+name: Claude Code - Issue to PR
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  issue-to-pr:
+    # Issueが作成されたとき OR "claude"ラベルが付いたとき
+    if: |
+      (github.event_name == 'issues' &&
+       (github.event.action == 'opened' || github.event.action == 'labeled') &&
+       (contains(github.event.issue.labels.*.name, 'claude') ||
+        contains(github.event.issue.body, '/claude-implement')))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            このIssueの内容を実装してPRを作成してください。
+
+            Issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
+
+            内容:
+            ${{ github.event.issue.body }}
+
+            作業方針:
+            1. 新しいブランチ `claude/issue-${{ github.event.issue.number }}` を作成
+            2. Issueの要件に従ってコードを実装
+            3. 実装が完了したらPRを作成し、Issue #${{ github.event.issue.number }} に紐付ける
+            4. PRタイトルは "feat: <Issueタイトル>" の形式で
+
+  review-pr:
+    # PRコメントで "@claude review" と書いたとき
+    if: |
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, '@claude review')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            このPRのコードレビューを行ってください。
+
+            以下の観点でレビューしてコメントを投稿してください:
+            1. バグや論理的な問題
+            2. セキュリティ上の懸念
+            3. パフォーマンスの改善余地
+            4. コードの可読性・保守性
+            5. テストの必要性
+
+            PR: ${{ github.event.issue.html_url }}
+
+            レビュー結果はPRにコメントとして投稿してください。
+            問題がなければ "LGTM" を含むコメントを投稿してください。
+
+  fix-review-comments:
+    # PRコメントで "@claude fix" と書いたとき
+    if: |
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, '@claude fix')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Claude Code Fix
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            このPRのレビューコメントを修正してください。
+
+            指摘されている問題をすべて修正してコミットしてください。
+            修正後、修正内容の要約をPRにコメントしてください。
+
+            PR: ${{ github.event.issue.html_url }}
