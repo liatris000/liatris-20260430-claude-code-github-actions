@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code × GitHub Actions — Issue→PR自動化テンプレート</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --accent: #f78166;
+      --accent2: #79c0ff;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --green: #56d364;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+    }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header h1 { font-size: 1.4rem; }
+    header .badge {
+      background: var(--accent);
+      color: #000;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    main { max-width: 900px; margin: 0 auto; padding: 2rem; }
+
+    .hero {
+      text-align: center;
+      padding: 3rem 0 2rem;
+    }
+    .hero h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p { color: var(--muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin: 2.5rem 0;
+    }
+    .flow-step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1.2rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .flow-arrow { color: var(--muted); font-size: 1.2rem; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .card-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .card h3 { font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent2); }
+    .card p { color: var(--muted); font-size: 0.875rem; }
+
+    .trigger-badge {
+      display: inline-block;
+      background: rgba(121, 192, 255, 0.15);
+      color: var(--accent2);
+      border: 1px solid rgba(121, 192, 255, 0.3);
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      margin-bottom: 0.5rem;
+    }
+
+    .setup {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+    .setup h2 { margin-bottom: 1rem; font-size: 1.2rem; }
+    .setup ol { padding-left: 1.5rem; }
+    .setup li { margin-bottom: 0.5rem; color: var(--muted); }
+    .setup code {
+      background: rgba(255,255,255,0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: var(--text);
+      font-size: 0.875rem;
+    }
+
+    .secret-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .secret-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(255,255,255,0.04);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+    }
+    .secret-key { font-family: monospace; font-size: 0.875rem; color: var(--accent); flex: 1; }
+    .secret-desc { color: var(--muted); font-size: 0.8rem; }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: 0.875rem;
+      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+    }
+    footer a { color: var(--accent2); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <span style="font-size:1.5rem">🤖</span>
+    <h1>Claude Code × GitHub Actions</h1>
+    <span class="badge">テンプレート</span>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h2>Issue → PR を AI が全自動化</h2>
+      <p>GitHub IssueにClaude Codeを連携。タスクを書くだけでブランチ作成・実装・PR作成まで自動化します。</p>
+    </div>
+
+    <div class="flow">
+      <div class="flow-step">📝 Issue作成</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">🏷️ claudeラベル付与</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">🤖 Claude Code起動</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">🌿 ブランチ作成</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">💻 実装</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">✅ PR作成</div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🏗️</div>
+        <div class="trigger-badge">issue: opened / labeled</div>
+        <h3>Issue → PR 自動実装</h3>
+        <p>Issueに <code>claude</code> ラベルを付けるか、本文に <code>/claude-implement</code> を書くと自動実装が始まります。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔍</div>
+        <div class="trigger-badge">PR comment: @claude review</div>
+        <h3>PR 自動レビュー</h3>
+        <p>PRのコメントに <code>@claude review</code> と書くと、バグ・セキュリティ・パフォーマンスの観点でレビューします。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔧</div>
+        <div class="trigger-badge">PR comment: @claude fix</div>
+        <h3>レビュー指摘を自動修正</h3>
+        <p>レビュー後に <code>@claude fix</code> と書くと、指摘事項をすべて修正してコミットします。</p>
+      </div>
+    </div>
+
+    <div class="setup">
+      <h2>🚀 セットアップ手順</h2>
+      <ol>
+        <li>このリポジトリをフォーク or テンプレートとして使用</li>
+        <li>リポジトリの <strong>Settings → Secrets and variables → Actions</strong> を開く</li>
+        <li>以下のシークレットを登録:</li>
+      </ol>
+      <div class="secret-list">
+        <div class="secret-item">
+          <span class="secret-key">ANTHROPIC_API_KEY</span>
+          <span class="secret-desc">Anthropic コンソールで取得</span>
+        </div>
+        <div class="secret-item">
+          <span class="secret-key">GITHUB_TOKEN</span>
+          <span class="secret-desc">Actions が自動生成（追加不要）</span>
+        </div>
+      </div>
+      <br>
+      <ol start="4">
+        <li>Issueを作成して <code>claude</code> ラベルを付けて試してみましょう！</li>
+      </ol>
+    </div>
+  </main>
+
+  <footer>
+    <p>Claude Code × GitHub Actions テンプレート</p>
+    <p style="margin-top:0.5rem">
+      <a href="https://docs.anthropic.com/ja/docs/claude-code/github-actions" target="_blank">Claude Code GitHub Actions ドキュメント</a>
+    </p>
+  </footer>
+</body>
+</html>
